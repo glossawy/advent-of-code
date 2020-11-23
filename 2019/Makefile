@@ -1,5 +1,5 @@
 
-DAYS := $(wildcard solutions/day10)
+DAYS := $(dir $(wildcard solutions/day*/Makefile))
 
 build:
-	$(foreach dir,$(DAYS),(make -C "$(dir)"))
+	$(foreach dir,$(DAYS),echo "$(dir)" && make -C "$(dir)" &&) true

@@ -193,7 +193,7 @@ fun withInput fOpt f =
       val tokenized = map (forceParseInt o String.str) o String.explode $ rawInput
   in f tokenized end
 
-fun solvePart1 () = withInput NONE (fn values => (
+fun solvePart1 fOpt = withInput fOpt (fn values => (
   let fun layerCountCmp (l1, l2) =
         Int.compare (IntMap.getDefault 0 0 l1, IntMap.getDefault 0 0 l2)
 
@@ -212,7 +212,27 @@ fun solvePart1 () = withInput NONE (fn values => (
   end
 ))
 
-fun solvePart2 () = withInput NONE (fn values => (
+fun solvePart2 fOpt = withInput fOpt (fn values => (
   let val image = Image.makeImage (25, 6) values
   in print $ Image.toString image; image end
 ))
+
+fun main (name, args) =
+  let fun exec "part1" x =
+          let val { image, layerCounts, chosen, result } = solvePart1 x
+          in
+            print "Additional debug info available in repl.\n";
+            printConcat ["Result: ", Int.toString result];
+            print "Image:";
+            print $ Image.toString image
+          end
+        | exec "part2" x = ignore $ solvePart2 x
+        | exec s _ = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  in
+   case args of
+      [part, file] => exec part $ SOME file
+    | [part] => exec part $ NONE
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2> [infile]"]
+  end
+  handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
+val main : string * string list -> unit = main
