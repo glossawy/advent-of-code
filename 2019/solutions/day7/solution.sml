@@ -344,7 +344,7 @@ fun toInputTuple (x1 :: x2 :: x3 :: x4 :: x5 :: _) = (x1, x2, x3, x4, x5)
 val allPermutations = map toInputTuple o permute $ [0, 1, 2, 3, 4]
 val allPermutations2 = map toInputTuple o permute $ [5, 6, 7, 8, 9]
 
-fun run (p1, p2, p3, p4, p5) = withInput NONE (fn program =>
+fun run fOpt (p1, p2, p3, p4, p5) = withInput fOpt (fn program =>
   let val output = ref 0
       fun handler s =
         let val strm = ref s
@@ -367,7 +367,7 @@ fun run (p1, p2, p3, p4, p5) = withInput NONE (fn program =>
   end
 )
 
-fun runPart2 (p1, p2, p3, p4, p5) = withInput NONE (fn program =>
+fun runPart2 fOpt (p1, p2, p3, p4, p5) = withInput fOpt (fn program =>
   let
       (* Queue Helpers *)
       fun enqueue x q = q := (Queue.push x (! q))
@@ -433,11 +433,24 @@ fun runPart2 (p1, p2, p3, p4, p5) = withInput NONE (fn program =>
   end
 )
 
-fun solve () =
-  let val results = List.map run allPermutations
+fun solve fOpt =
+  let val results = List.map (run fOpt) allPermutations
   in Option.valOf o maximum Int.compare $ results end
 
-fun solvePart2 () =
-  let val results = List.map runPart2 allPermutations2
+fun solvePart2 fOpt =
+  let val results = List.map (runPart2 fOpt) allPermutations2
       val maximum = Option.valOf o maximum Int.compare $ results
   in maximum end
+
+fun main (name, args) =
+  let fun exec "part1" fOpt = print $ Int.toString (solve fOpt)
+        | exec "part2" fOpt = print $ Int.toString (solvePart2 fOpt)
+        | exec s _ = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  in
+   case args of
+      [part, file] => exec part $ SOME file
+    | [part] => exec part $ NONE
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2> [infile]"]
+  end
+  handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
+val main : string * string list -> unit = main

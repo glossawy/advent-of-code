@@ -86,3 +86,22 @@ fun solvePart2 () =
       val pred = monotonicDigits /\ identicalAdjacentPairOnly
       val results = istreamToList $ ifilter pred istrm
   in (length results, results) end
+
+fun main (name, args) =
+  let fun exec "part1" = solvePart1 ()
+        | exec "part2" = solvePart2 ()
+        | exec s = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  in
+   case args of
+      [part, withResult] => (
+        let val (len, results) = exec part
+        in 
+          printConcat ["Length: ", Int.toString len];
+          (if withResult = "--with-results" then printConcat ["Results: [", join ", " o List.map Int.toString $ results, "]"] else ignore ())
+        end
+      )
+    | [part] => main (name, [part, ""])
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2> [--with-results]"]
+  end
+  handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
+val main : string * string list -> unit = main

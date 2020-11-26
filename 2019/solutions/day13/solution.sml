@@ -12,6 +12,7 @@ fun f $ x = f x
 local
   val stdout = TextIO.stdOut
   val stderr = TextIO.stdErr
+  val debug = false
   val stdin = TextIO.stdIn
   val removeNewline = String.translate (fn c => if c = #"\n" then "" else String.str c)
   fun writeOut ending pipe s = (TextIO.output (pipe, s ^ ending); TextIO.flushOut pipe)
@@ -19,6 +20,7 @@ in
   val print = writeOut "\n" stdout
   val printConcat = print o concat
   val printErr = writeOut "\n" stderr
+  val printDebug = if debug then print else ignore
   val printErrConcat = printErr o concat
   fun readUserInput prompt = (writeOut "" stdout prompt; (Option.map removeNewline o TextIO.inputLine) stdin)
 
@@ -383,7 +385,7 @@ struct
         fun getState () = (!score, M.listItemsi $ !blocks)
         fun setCont k = arcadeCont := (fn () => k)
         fun setAiCont k = aiCont := (fn () => k)
-        fun updateScore s = (print $ Int.toString s; score := s)
+        fun updateScore s = (printDebug $ Int.toString s; score := s)
 
         fun aiServer k =
           let val (bx, by) = !ballPosition
@@ -432,7 +434,9 @@ fun part1 fOpt = withInput fOpt (fn program => (
   end
 ))
 
-fun part2 fOpt = withInput fOpt (fn program => (
+datatype solvemode = SPECTATOR | INSTANT
+
+fun part2 mode fOpt = withInput fOpt (fn program => (
   let val program = 2 :: tl program
       val state = Intcode.initialProgramState program
       val (aiHdlr, outputHdlr, getArcadeState) = Arcade.make ()
@@ -448,9 +452,15 @@ fun part2 fOpt = withInput fOpt (fn program => (
       fun inputHdlr inK =
         let val (_, blocks) = getArcadeState ()
         in
-          print "\n";
-          print o Arcade.drawArcadeScreen $ blocks;
-          wait 10;
+          (
+            case mode of
+              INSTANT => ()
+            | SPECTATOR => (
+              print "\n";
+              print o Arcade.drawArcadeScreen $ blocks;
+              wait 10
+            )
+          );
           aiHdlr inK
         end
 
@@ -463,13 +473,14 @@ fun part2 fOpt = withInput fOpt (fn program => (
 ))
 
 fun main ((name, args) : string * string list) =
-  let fun exec "part1" x = print o Int.toString $ part1 x
-        | exec "part2" x = print o Int.toString $ part2 x
-        | exec s _ = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  let fun exec "part1" = print o Int.toString o part1
+        | exec "part2" = print o Int.toString o part2 INSTANT
+        | exec "watch2" = print o Int.toString o part2 SPECTATOR
+        | exec s = raise Fail $ concat ["Invalid part"]
   in
    case args of
       [part, file] => exec part $ SOME file
     | [part] => exec part $ NONE
-    | _ => raise Fail $ concat ["usage: ", name, " part [infile]"]
+    | _ => raise Fail $ concat ["usage: ", name, " <part1|part2|watch2> [infile]"]
   end
   handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))

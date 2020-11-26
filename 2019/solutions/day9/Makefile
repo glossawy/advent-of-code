@@ -9,7 +9,8 @@ BUILD_ARGS:=-output $(OUTPUT)
 
 ENTRY_POINT='val _ = main (CommandLine.name (), CommandLine.arguments ())'
 
-solution: clean $(SOLUTION_SOURCE)
+solution: $(SOLUTION_SOURCE)
+	make clean
 	# Create Temporary Build Files
 	cp $(SOLUTION_SOURCE) $(SOLUTION_TARGET)
 	cp $(COMPILE_SOURCE) $(COMPILE_TARGET)
@@ -22,6 +23,12 @@ solution: clean $(SOLUTION_SOURCE)
 	rm $(SOLUTION_TARGET) && rm $(COMPILE_TARGET)
 
 .PHONY: clean
+
+run:
+	printf "$(shell basename $(CURDIR)) Part 1: "
+	./solution part1 | tail -n1
+	printf "$(shell basename $(CURDIR)) Part 2: "
+	./solution part2 | tail -n1
 
 clean:
 	rm -f $(OUTPUT) $(SOLUTION_TARGET) $(COMPILE_TARGET)

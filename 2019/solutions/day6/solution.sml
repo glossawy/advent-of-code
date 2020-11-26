@@ -186,3 +186,19 @@ fun withInputs fOpt f =
       val edges = List.map toEdge rawInput
       val graph = Graph.fromEdges edges
   in f graph end
+
+fun solvePart1 fOpt = withInputs fOpt $ Graph.orbitChecksum "COM"
+fun solvePart2 fOpt = withInputs fOpt $ Graph.leapsBetween "YOU" "SAN"
+
+fun main (name, args) =
+  let fun exec "part1" = print o Int.toString o solvePart1
+        | exec "part2" = print o Int.toString o Option.valOf o solvePart2
+        | exec s = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  in
+   case args of
+      [part, file] => exec part $ SOME file
+    | [part] => exec part $ NONE
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2> [infile]"]
+  end
+  handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
+val main : string * string list -> unit = main

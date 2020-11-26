@@ -42,6 +42,9 @@ in fun maximum f l = extremum GREATER f l
    fun minimum f l = extremum LESS f l
 end
 
+fun join _ [] = ""
+  | join sep (x :: xs) =  List.foldr (fn (e, a) => e ^ sep ^ a) x xs
+
 (* Basic useful functions *)
 fun id x = x
 fun const k = (fn _ => k)

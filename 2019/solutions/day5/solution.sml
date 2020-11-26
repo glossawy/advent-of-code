@@ -1,5 +1,10 @@
 (* Standard ML of New Jersey v110.91 *)
 
+structure Cont = SMLofNJ.Cont
+type 'a cont = 'a Cont.cont
+val callcc = Cont.callcc
+val throw = Cont.throw
+
 local
   val stdout = TextIO.stdOut
   val stderr = TextIO.stdErr
@@ -58,6 +63,7 @@ type 'a heap = 'a Heap.heap
 
 signature INTCODE =
 sig
+  val interpretWithHandler : ((string * string option cont) -> 'b) -> int list -> int heap
   val interpret : int list -> int heap
 end
 
@@ -65,6 +71,8 @@ end
 structure Intcode :> INTCODE =
 struct
   exception Halt
+  exception GetInput of string * string option cont
+  exception Unhandled
   exception UnknownMode of int
   exception UnknownOpCode of int
 
@@ -128,7 +136,7 @@ struct
           eval (pc + 4, heap)
         )
       | Input out => (
-          set out o Option.valOf $ (Option.map forceParseInt o readUserInput) "Enter Input: ";
+          set out o Option.valOf o (Option.map forceParseInt) $ callcc (fn k => raise GetInput ("Enter Input: ", k));
           eval (pc + 2, heap)
         )
       | Output src => (
@@ -152,11 +160,15 @@ struct
       | HaltProgram => raise Halt
     end
 
-  fun interpret program =
+  fun interpretWithHandler onInput program  = 
     let val (pc, heap) = (0, Heap.fromList program)
     in
-      eval (pc, heap) handle Halt => heap
+      eval (pc, heap)
+      handle Halt => heap
+           | GetInput (prompt, k) => (onInput (prompt, k); raise Unhandled)
     end
+
+  val interpret = interpretWithHandler (fn (prompt, k) => throw k (readUserInput prompt))
 end
 
 (* Entry Functions *)
@@ -168,4 +180,32 @@ fun withInput fOpt f =
       val tokenized = map forceParseInt o String.tokens isDelim $ rawInput
   in f tokenized end
 
-fun solve () = withInput NONE Intcode.interpret;
+fun solve inp fOpt = withInput fOpt $ (fn tokens => 
+  let exception EmptyBuffer
+      val inputs : string list ref = ref $ List.map Int.toString inp
+      fun onInput (_, k) =
+        let val inputBuffer = ! inputs
+            val _ = (if List.length inputBuffer = 0 then raise EmptyBuffer else true)
+            val (nxt :: rest) = inputBuffer
+            val _ = (inputs := rest)
+        in 
+          printConcat ["Yielding input: ", nxt];
+          throw k $ SOME nxt
+        end
+  in
+    Intcode.interpretWithHandler onInput tokens
+  end
+)
+
+fun main (name, args) = ignore $
+  let fun exec "part1" = solve [1]
+        | exec "part2" = solve [5]
+        | exec s = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  in
+   case args of
+      [part, file] => exec part $ SOME file
+    | [part] => exec part $ NONE
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2> [infile]"]
+  end
+  handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
+val main : string * string list -> unit = main

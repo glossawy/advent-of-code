@@ -25,10 +25,10 @@ solution: $(SOLUTION_SOURCE)
 .PHONY: clean run
 
 run:
-	echo "$(shell basename $(CURDIR)) Part 1: "
-	./solution part1 | tail -n9
-	echo "$(shell basename $(CURDIR)) Part 2: "
-	./solution part2
+	printf "$(shell basename $(CURDIR)) Part 1: "
+	./solution part1 | tail -n1
+	printf "$(shell basename $(CURDIR)) Part 2: "
+	./solution part2 | tail -n1
 
 clean:
 	rm -f $(OUTPUT) $(SOLUTION_TARGET) $(COMPILE_TARGET)

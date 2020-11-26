@@ -8,12 +8,14 @@ local
   val stdout = TextIO.stdOut
   val stderr = TextIO.stdErr
   val stdin = TextIO.stdIn
+  val debug = false
   fun writeOut ending pipe s = (TextIO.output (pipe, s ^ ending); TextIO.flushOut pipe)
 in
   val removeNewline = String.translate (fn c => if c = #"\n" then "" else String.str c)
   val print = writeOut "\n" stdout
   val printConcat = print o concat
   val printErr = writeOut "\n" stderr
+  val printDebug = if debug then print else ignore
   val printErrConcat = printErr o concat
   fun readUserInput prompt = (writeOut "" stdout prompt; (Option.map removeNewline o TextIO.inputLine) stdin)
 
@@ -142,7 +144,7 @@ struct
               in List.foldl addNeeded needed' inputs end
 
         val initialMap = M.insert (M.empty, e, q)
-        val _ = print $ String.concatWith " -> " (TopoSort.sort reactions e)
+        val _ = printDebug $ String.concatWith " -> " (TopoSort.sort reactions e)
     in List.foldl determine initialMap (TopoSort.sort reactions e)  end
 
   fun resourcesNeeded reactions (q, e) =
@@ -158,7 +160,7 @@ struct
               in List.foldl addNeeded needed' inputs end
 
         val initialMap = M.insert (M.empty, e, q)
-        val _ = print $ String.concatWith " -> " (TopoSort.sort reactions e)
+        val _ = printDebug $ String.concatWith " -> " (TopoSort.sort reactions e)
     in List.foldl determine initialMap (TopoSort.sort reactions e)  end
 
   fun oreNeeded reactions (q, e) =

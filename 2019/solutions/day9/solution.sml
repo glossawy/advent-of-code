@@ -394,13 +394,33 @@ fun withInput fOpt f =
       val tokenized = map forceParseIntInf o String.tokens isDelim $ rawInput
   in f tokenized end
 
+fun solve inp fOpt = withInput fOpt $ (fn tokens => 
+  let exception EmptyBuffer
+      val inputs : string list ref = ref $ List.map Int.toString inp
+      fun onInput () =
+        let val inputBuffer = ! inputs
+            val _ = (if List.length inputBuffer = 0 then raise EmptyBuffer else true)
+            val (nxt :: rest) = inputBuffer
+            val _ = (inputs := rest)
+        in 
+          printConcat ["Yielding input: ", nxt];
+          SOME nxt
+        end
+  in
+    Intcode.interpretWithHandlers (onInput, print) tokens
+  end
+)
+
 fun main (name, args) =
-  let fun exec x = ignore $ withInput x Intcode.interpret
+  let fun exec "part1" = ignore o solve [1] 
+        | exec "part2" = ignore o solve [2]
+        | exec "manual" = ignore o (fn opt => withInput opt Intcode.interpret)
+        | exec s = raise Fail $ concat ["Invalid part, must be part1 or part2"]
   in
    case args of
-      [file] => exec $ SOME file
-    | [] => exec $ NONE
-    | _ => raise Fail $ concat ["usage: ", name, " [infile]"]
+      [part, file] => exec part $ SOME file
+    | [part] => exec part NONE
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2|manual> [infile]"]
   end
   handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
 val main : string * string list -> unit = main

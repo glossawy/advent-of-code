@@ -231,3 +231,16 @@ fun solvePart2 fOpt =
               | _ => raise IntersectionIsNotIntersection  (* Being Lazy *)
         in Option.valOf o minimum Int.compare o map cost end
   in withInputs fOpt findMinStep end
+
+fun main (name, args) =
+  let fun exec "part1" = print o Int.toString o solvePart1
+        | exec "part2" = print o Int.toString o solvePart2
+        | exec s = raise Fail $ concat ["Invalid part, must be part1 or part2"]
+  in
+   case args of
+      [part, file] => exec part $ SOME file
+    | [part] => exec part $ NONE
+    | _ => raise Fail $ concat ["usage: ", name, "<part1|part2> [infile]"]
+  end
+  handle Fail s => (printErr s; OS.Process.exit(OS.Process.failure))
+val main : string * string list -> unit = main
