@@ -2,8 +2,8 @@ lib = File.expand_path('../lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'ostruct'
-require 'pathname'
 require 'pastel'
+require 'pathname'
 require 'pry'
 
 $pastel = Pastel.new
@@ -38,10 +38,3 @@ module AdventOfCode
 
   def self.placeholder(msg = 'Placeholder for future solution') = raise(NoSolutionYet, msg)
 end
-
-100
-011
-101
-110
-011
-111
