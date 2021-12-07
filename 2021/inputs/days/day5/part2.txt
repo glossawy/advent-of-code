@@ -1,1 +1,1 @@
-/home/glossawy/repositories/advent-of-code/2021/ruby/inputs/days/day5/part1.txt
+./part1.txt
