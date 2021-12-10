@@ -34,7 +34,8 @@ module AdventOfCode::Days
     end
 
     def solve_part2
-      patterns.map do |pattern|
+      satisfiability_checkers = []
+      outputs = patterns.map do |pattern|
         could_bes = Hash.new { |h, k| h[k] = Set.new }
         satisfy_checker = SatisfiabilityProblem.new
 
@@ -48,12 +49,20 @@ module AdventOfCode::Days
 
         assignment = search_for_assignment(satisfy_checker)
 
+        satisfiability_checkers << satisfy_checker
+
         pattern.output.map do |output_signal|
           NUMBER_REQUIREMENTS.rassoc(Set.new(output_signal.chars.map { |c| assignment[c] })).first
         end.reverse.map.with_index do |digit, power|
           digit * (10 ** power)
         end.sum
       end
+
+      solution(
+        outputs.sum,
+        outputs: outputs,
+        satisfiability_checkers: satisfiability_checkers
+      )
     end
 
     private
@@ -111,6 +120,19 @@ module AdventOfCode::Days
             Set.new(signal.chars.map { |c| assignments[c] }) == required_segments
           end
         end
+      end
+
+      def to_s
+        conditions.map do |clause|
+          signal = clause.first.first
+
+          t = clause.map do |cond|
+            *, segs = *cond
+            NUMBER_REQUIREMENTS.rassoc(segs).first.to_s
+          end.join(' || ')
+
+          "(mapping applied to '#{signal}' yields segments for #{t})"
+        end.join(' && ')
       end
     end
   end
