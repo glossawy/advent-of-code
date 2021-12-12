@@ -6,8 +6,8 @@ module AdventOfCode::Days
       alias x first
       alias y second
 
-      alias r y
-      alias c x
+      alias c y
+      alias r x
 
       def initialize(x, y)
         @first = x

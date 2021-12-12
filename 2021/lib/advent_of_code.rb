@@ -5,6 +5,7 @@ require 'ostruct'
 require 'pastel'
 require 'pathname'
 require 'pry'
+require 'set'
 
 $pastel = Pastel.new
 
