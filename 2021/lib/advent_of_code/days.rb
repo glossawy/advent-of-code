@@ -35,7 +35,7 @@ module AdventOfCode
           raise MissingPart, "Asked for solution to part #{part} but we only have #{input_files.size} inputs" \
             if part > input_files.size
 
-          solver_factory.new(input_files[part - 1])
+          solver_factory.new(input_files.sort_by(&:to_s)[part - 1])
         end
       end
     end
