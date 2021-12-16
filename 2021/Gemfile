@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
+gem 'fibonacci_heap'
 gem 'pastel'
 gem 'pry'
 gem 'pry-byebug'
